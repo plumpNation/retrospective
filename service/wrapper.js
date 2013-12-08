@@ -1,7 +1,14 @@
 var sage = require('sage'),
     q = require('q'),
-    es = sage('http://localhost:9200'),
+    config = require('./config'),
+    es = sage(config.db.url),
 
+    /**
+     * Convenience function to pull the _source element out of the elastic search response.
+     *
+     * @param  {object} result Object containing the _source element.
+     * @return {object}        The source element with the unique id appended.
+     */
     adaptResult = function (result) {
         var _result = result._source;
         _result.id = result.id;
@@ -9,6 +16,13 @@ var sage = require('sage'),
         return _result;
     },
 
+    /**
+     * Convenience function to adaptResult of an array of results.
+     *
+     * @see adaptResult
+     * @param  {array} results The array of results
+     * @return {array}         The array of adapted results.
+     */
     adaptResults = function (results) {
         results = results.map(function (result) {
             return adaptResult(result);
@@ -202,6 +216,12 @@ exports.destroyIndex = function (indexName) {
     return defer.promise;
 };
 
+/**
+ * Creates an index, the equivalent of a database in elastic search.
+ *
+ * @param  {string} indexName The name of the index
+ * @return {promise}           Resolves with a success or failure response.
+ */
 exports.createIndex = function (indexName) {
     var esi = es.index(indexName),
         defer = q.defer();
@@ -218,6 +238,12 @@ exports.createIndex = function (indexName) {
     return defer.promise;
 };
 
+/**
+ * Use with Apache Lucene query strings
+ *
+ * @param  {string} queryString
+ * @return {promise}
+ */
 exports.query = function (queryString) {
     var typeName,
         // results to return
@@ -254,11 +280,7 @@ exports.query = function (queryString) {
                     return;
                 }
 
-                console.log('results');
-                console.log(results.length);
-
                 results = adaptResults(results);
-                console.log(results.length);
 
                 defer.resolve(results);
             });

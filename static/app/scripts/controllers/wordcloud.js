@@ -4,18 +4,24 @@ angular.module('retrospectApp')
     .controller('WordCloudCtrl', [
         '$scope',
         '$routeParams',
+        'arrayUtils',
         'wordcloud',
 
-        function ($scope, $routeParams, wordcloud) {
+        function ($scope, $routeParams, arrayUtils, wordcloud) {
             var buildCloud = function (cloudwords) {
                 console.log('building cloud');
 
-                var fill = d3.scale.category20();
+                var fill = d3.scale.category20(),
+                    wordFrequency = arrayUtils.getWordCount(cloudwords),
+                    words = cloudwords.map(function (cloudword) {
+                        return {
+                            text: cloudword,
+                            size: 10 + wordFrequency[cloudword] * 90
+                        };
+                    });
 
-                d3.layout.cloud().size([300, 300])
-                        .words(cloudwords.map(function (d) {
-                            return {text: d, size: 10 + Math.random() * 90};
-                        }))
+                d3.layout.cloud().size([window.innerWidth, window.innerHeight])
+                        .words(words)
                         .padding(5)
                         .rotate(function () { return ~~(Math.random() * 2) * 90; })
                         .font('Impact')
@@ -45,7 +51,7 @@ angular.module('retrospectApp')
 
             wordcloud.get(function (cloudwords) {
                 buildCloud(cloudwords.results);
-            })
+            });
         }
     ]
 );
