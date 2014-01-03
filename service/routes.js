@@ -13,10 +13,12 @@ exports.setup = function (api) {
 
     api.get('/retrospectives', handlers.getRetrospectives);
     api.get('/retrospectives/:retroId', handlers.getRetrospective);
+    api.put('/retrospectives/:retroId', handlers.putRetrospective);
     api.post('/retrospectives', handlers.postRetrospective);
 
     api.get('/retrospectives/:retroId/tickets', handlers.getTickets);
     api.get('/retrospectives/:retroId/tickets/:ticketId', handlers.getTicket);
+    api.put('/retrospectives/:retroId/tickets/:ticketId', handlers.putTicket);
     api.post('/retrospectives/:retroId/tickets', handlers.postTicketToRetrospective);
     api.delete('/retrospectives/:retroId/tickets/:ticketId', handlers.deleteTicket);
 

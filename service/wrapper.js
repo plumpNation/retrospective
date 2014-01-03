@@ -1,5 +1,6 @@
 var sage = require('sage'),
     q = require('q'),
+    _ = require('lodash'),
     es = sage('http://localhost:9200'),
 
     adaptResult = function (result) {
@@ -84,6 +85,11 @@ exports.post = function (data) {
                 var defer = q.defer();
                 promises.push(defer.promise);
 
+                if (!item.createdAt) {
+                    item.createdAt = JSON.parse(
+                        JSON.stringify(new Date())
+                    );
+                }
                 debugger;
 
                 est.post(item, function (err, result) {
@@ -112,6 +118,75 @@ exports.post = function (data) {
                 return promises[0];
             }
 
+            return q.all(promises);
+        }
+    };
+};
+
+exports.put = function (data) {
+    var typeName;
+
+    return {
+        ofType: function (_typeName) {
+            typeName = _typeName;
+            return this;
+        },
+        withId: function(_id) {
+            data.id = _id;
+            return this;
+        },
+        into: function (indexName) {
+            var esi = es.index(indexName),
+                promises = [],
+                defer = q.defer(),
+                est;
+
+            promises.push(defer.promise);
+
+            if (!typeName) {
+                defer.reject(new Error('You must specify a type'));
+                return;
+            }
+
+            est = esi.type(typeName);
+
+            est.get(data.id, function(err, result) {
+                if (err) {
+                    // if it didn't find it, do a est.post?
+                    defer.reject(err);
+                    return;
+                }
+
+                data.updatedAt = JSON.parse(
+                    JSON.stringify(new Date())
+                );
+
+                _.forEach(result._source, function(value, name) {
+                    if (!data[name] ) {
+                        data[name] = value;
+                    }
+                });
+
+                est.put(data, function(err, result) {
+                    if (err) {
+                        defer.reject(err);
+                        return;
+                    }
+
+                    est.get(result.id, function (err, result) {
+                        if (err) {
+                            defer.reject(err);
+                            return;
+                        }
+
+                        result = adaptResult(result);
+                        defer.resolve(result);
+                    });
+                });
+            });
+            if (data.length === 1) {
+                return promises[0];
+            }
             return q.all(promises);
         }
     };
@@ -169,7 +244,7 @@ exports.getAll = function (types) {
 
             est = esi.type(types);
 
-            est.find(function (err, results) {
+            est.find(function (err, results, code, headers, message) {
                 var response;
 
                 if (err) {
@@ -178,6 +253,9 @@ exports.getAll = function (types) {
                 }
 
                 response = adaptResults(results);
+
+                // Add a total count for the query
+                response.total = message.body.hits.total;
 
                 defer.resolve(response);
             });
@@ -286,17 +364,20 @@ exports.query = function (queryString) {
 
             qStr = {'size': size, 'query': { 'query_string': { 'query': queryString }}};
 
-            est.find(qStr, function (err, results) {
+            est.find(qStr, function (err, results, code, headers, message) {
                 if (err) {
                     defer.reject(err);
                     return;
                 }
 
-                console.log('results');
-                console.log(results.length);
-
+                console.log('results', results.length);
                 results = adaptResults(results);
-                console.log(results.length);
+                console.log('adapted results', results.length);
+
+                // Add a total count for the query
+                results.total = message.body.hits.total;
+
+
 
                 defer.resolve(results);
             });

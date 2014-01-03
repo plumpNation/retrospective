@@ -1,5 +1,5 @@
 {
-  "name": "retrospective",
+  "name": "Retrospectacular",
   "version": "0.0.0",
   "description": "A tool to aid remote retrospective and facilitate continuous improvement.",
   "main": "app.js",
@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/plumpNation/retrospective.git"
+    "url": "git://github.com/FronterAS/retrospectacular.git"
   },
   "keywords": [
     "retrospective",
@@ -19,12 +19,13 @@
   "author": "The Retrospective Team: Fronter AS",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/plumpNation/retrospective/issues"
+    "url": "https://github.com/FronterAS/retrospectacular/issues"
   },
   "dependencies": {
     "express": "~3.4.6",
     "q": "~0.9.7",
-    "sage": "~0.4.2"
+    "sage": "~0.4.2",
+    "lodash": "~2.4.1"
   },
   "devDependencies": {
     "should": "~2.1.1",

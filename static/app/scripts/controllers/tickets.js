@@ -9,17 +9,23 @@ angular.module('retrospectApp')
         '$routeParams',
         '$timeout',
         'tickets',
+        'Lstore',
 
-        function ($q, $scope, $location, $routeParams, $timeout, tickets) {
+        function ($q, $scope, $location, $routeParams, $timeout, tickets, Lstore) {
+            var storedTickets;
 
-            $scope.tickets = [];
             $scope.role;
 
             $scope.retroId = $routeParams.retroId;
 
+            storedTickets = Lstore.get($scope.retroId);
+
+            $scope.tickets = storedTickets ? storedTickets : [];
+
             $scope.deleteTicket = function (ticket) {
                 var index = $scope.tickets.indexOf(ticket);
                 $scope.tickets.splice(index, 1);
+                Lstore.set($scope.retroId, $scope.tickets);
             };
 
             $scope.setRole = function (role) {
@@ -50,14 +56,17 @@ angular.module('retrospectApp')
                     'createdAt': JSON.parse($scope.createdAt)
                 };
 
-                console.log(params);
-
                 $scope.tickets.push(params);
 
                 // clear the message input box
                 $scope.retroMessage = '';
+
+                Lstore.set($scope.retroId, $scope.tickets);
             };
 
+            $scope.saveChanges = function () {
+                Lstore.set($scope.retroId, $scope.tickets);
+            }
 
             $scope.retroPublish = function () {
                 var promises = [];
@@ -83,6 +92,7 @@ angular.module('retrospectApp')
                     }, 1000);
 
                     $scope.tickets = [];
+                    Lstore.remove($scope.retroId, $scope.tickets);
                 });
             };
         }
