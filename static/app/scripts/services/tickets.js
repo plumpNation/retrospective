@@ -8,7 +8,12 @@ angular.module('retrospectApp')
 
         function ($resource, SERVICE_URL) {
             return $resource(SERVICE_URL + '/retrospectives/:retroId/tickets/:ticketId',
-                { 'retroId': '@retroId' }
+                { 'retroId': '@retroId' },
+                {
+                    'put': {
+                        'method': 'PUT'
+                    }
+                }
             );
         }
     ]);

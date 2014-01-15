@@ -66,6 +66,7 @@ var db = require('../wrapper'),
 
             db.post(tag).ofType('tag').into('retrospectives')
                 .then(function (result) {
+                    console.log(result);
                     defer.resolve(result);
                 })
                 .fail(function (err) {

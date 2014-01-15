@@ -3,15 +3,15 @@
 angular.module('retrospectApp')
     .controller('BoardCtrl', [
         '$scope',
+        '$q',
         '$routeParams',
         'retrospectives',
         'tickets',
         'tags',
 
-        function ($scope, $routeParams, retrospectives, tickets, tags) {
-            var updateTickets,
-
-                updateTags = function () {
+        function ($scope, $q, $routeParams, retrospectives, tickets, tags) {
+            var getTags = function () {
+                    console.log('Updating tags...')
                     tags.get(function (tags) {
                         $scope.tags = tags.results.map(function (tag) {
                             return tag.name;
@@ -21,6 +21,42 @@ angular.module('retrospectApp')
                             local: $scope.tags
                         };
                     });
+                },
+
+                getTickets = function () {
+                    console.log('Updating tickets...');
+                    tickets.get({'retroId': $scope.retroId}, function (tickets) {
+                        console.log('Got tickets');
+                        $scope.tickets = tickets.results;
+                    });
+                },
+
+                saveTicketTags = function (tags) {
+                    var defer = $q.defer(),
+                        ptags = $scope.selectedTags.map(function (tag) {
+                                    return { 'name': tag };
+                                });
+
+                    if (!$scope.selectedTags.length) {
+                        defer.resolve(true);
+                        return defer.promise;
+                    }
+
+                    tickets.put(
+                        {
+                            'retroId': $scope.retroId,
+                            'ticketId': $scope.selectedTicket.id
+                        },
+                        {
+                            'tags': ptags
+                        },
+                        function (response) {
+                            console.log(response);
+                            defer.resolve(response);
+                        }
+                    );
+
+                    return defer.promise;
                 };
 
             $scope.retroId = $routeParams.retroId;
@@ -40,19 +76,14 @@ angular.module('retrospectApp')
             $scope.deleteTicket = function (ticket) {
                 var index = $scope.tickets.indexOf(ticket);
 
-                tickets.delete({'ticketId': ticket.id, 'retroId': $scope.retroId}, function () {
+                tickets.delete({
+                    'ticketId': ticket.id,
+                    'retroId': $scope.retroId
+                }, function () {
                     console.log('got a response');
                 });
 
                 $scope.tickets.splice(index, 1);
-            };
-
-            $scope.updateTickets = function () {
-                console.log('Updating tickets.');
-                tickets.get({'retroId': $scope.retroId}, function (tickets) {
-                    console.log('Got tickets');
-                    $scope.tickets = tickets.results;
-                });
             };
 
             /**
@@ -61,6 +92,7 @@ angular.module('retrospectApp')
              * @return {void}
              */
             $scope.selectTag = function () {
+                debugger;
                 if (!~$scope.selectedTags.indexOf($scope.tagSelect)) {
                     // @TODO: This is a quick fix. When you click the autocomplete selection
                     // you get a object not a string.
@@ -86,38 +118,36 @@ angular.module('retrospectApp')
                 }
             };
 
-            $scope.updateTicketTags = function (tags) {
-                var defer = $q.defer();
-
-                tickets.save($scope.selectedTags, function (response) {
-                    defer.resolve(response);
-                });
-
-                return defer.promise;
-            };
-
             $scope.chooseTags = function (ticket) {
                 $scope.choosingTag = true;
                 $scope.selectedTicket = ticket;
 
-                // We now reference the ticket tags, IT IS A REFERENCE!!!! that's why it updates
-                // as if by magic silly fucker!
-                $scope.selectedTags = ticket.tags;
+                // We now reference the ticket tags
+                $scope.selectedTags = ticket.tags || [];
             };
 
             $scope.closeTagChooser = function () {
-                updateTicketTags($scope.selectedTags)
-                    .then(function (response) {
-                        $scope.choosingTag = false;
-                        $scope.selectedTicket = null;
+                saveTicketTags($scope.selectedTags)
+                    .then(function (thereWereNewTags) {
+                        // Maybe don't refresh if no tags were saved.
+                        if (thereWereNewTags) {
+                            $scope.choosingTag = false;
+                            $scope.selectedTicket = null;
+                            $scope.refresh();
+                        }
                     });
+            };
+
+            $scope.refresh = function () {
+                getTickets();
+                getTags();
             };
 
             retrospectives.get({'retroId': $scope.retroId}, function (retrospective) {
                 $scope.retroName = retrospective.name;
             });
 
-            $scope.updateTickets();
+            $scope.refresh();
         }
     ]
 );

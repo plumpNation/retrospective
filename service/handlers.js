@@ -66,6 +66,27 @@ exports.deleteTicket = function (req, res) {
         });
 };
 
+exports.putTicket = function (req, res) {
+    var ticketData;
+
+    req.body.retroId = req.params.retroId;
+    console.log(req.body);
+    console.log('trying to put');
+
+    var ticket = {
+        '_id': req.params.ticketId
+    };
+
+    db.put(ticket).ofType('ticket').withId(req.params.ticketId).into('retrospectives')
+        .then(function (result) {
+            res.json(result);
+        })
+        .fail(function (err) {
+            console.log(err);
+            res.json(err);
+        });
+};
+
 exports.getRetrospective = function (req, res) {
     db.query('_id:' + req.params.retroId).of('retrospective').from('retrospectives')
         .then(function (result) {
@@ -101,18 +122,6 @@ exports.postRetrospective = function (req, res) {
 
 exports.putRetrospective = function (req, res) {
     db.put(req.body).ofType('retrospective').withId(req.params.retroId).into('retrospectives')
-        .then(function (result) {
-            res.json(result);
-        })
-        .fail(function (err) {
-            console.log(err);
-            res.json(err);
-        });
-};
-
-exports.putTicket = function (req, res) {
-    req.body.retroId = req.params.retroId;
-    db.put(req.body).ofType('ticket').withId(req.params.ticketId).into('retrospectives')
         .then(function (result) {
             res.json(result);
         })

@@ -161,8 +161,11 @@ exports.put = function (data) {
                     JSON.stringify(new Date())
                 );
 
+                console.log('PUTTING:');
+                console.log(result._source);
+
                 _.forEach(result._source, function(value, name) {
-                    if (!data[name] ) {
+                    if (!data[name]) {
                         data[name] = value;
                     }
                 });
@@ -180,6 +183,7 @@ exports.put = function (data) {
                         }
 
                         result = adaptResult(result);
+                        console.log(result);
                         defer.resolve(result);
                     });
                 });
