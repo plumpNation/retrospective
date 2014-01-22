@@ -21,17 +21,6 @@ exports.getTicketWords = function (req, res) {
         });
 };
 
-exports.getTags = function (req, res) {
-    db.getAll('tag').from('retrospectives')
-        .then(function (result) {
-            res.json({'results': result});
-        })
-        .fail(function (err) {
-            console.log(err);
-            res.json(err);
-        });
-};
-
 exports.getTickets = function (req, res) {
     var start = 0;
     if (!_.isUndefined(req.params.start)) {
