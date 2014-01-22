@@ -4,7 +4,7 @@
   "description": "A tool to aid remote retrospective and facilitate continuous improvement.",
   "main": "app.js",
   "scripts": {
-    "start": "node app.js",
+    "start": "git log -1 --format=format:%H > logs/version.log; node app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -24,8 +24,8 @@
   "dependencies": {
     "express": "~3.4.6",
     "q": "~0.9.7",
-    "sage": "~0.4.2",
-    "lodash": "~2.4.1"
+    "lodash": "~2.4.1",
+    "elasticsearch": "~1.0.3"
   },
   "devDependencies": {
     "should": "~2.1.1",

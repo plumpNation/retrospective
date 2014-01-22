@@ -1,17 +1,16 @@
-var db = require('./wrapper'),
+var _ = require('lodash'),
+    db = require('../wrapper'),
 
     explodeMessages = function (results) {
         var words = [];
-
-        results.forEach(function (result) {
+        _.each(results, function (result) {
             words = words.concat(result.message.split(' '));
         });
-
         return words;
     };
 
 exports.getTicketWords = function (req, res) {
-    db.getAll('ticket').from('retrospectives')
+    db.getAll('ticket').sortBy('createdAt:desc').from('retrospectives')
         .then(function (result) {
             var words = explodeMessages(result);
             res.json({'results': words});
@@ -34,7 +33,11 @@ exports.getTags = function (req, res) {
 };
 
 exports.getTickets = function (req, res) {
-    db.query('retroId:' + req.params.retroId).of('ticket').from('retrospectives')
+    var start = 0;
+    if (!_.isUndefined(req.params.start)) {
+        start = req.params.start;
+    }
+    db.query('retroId:' + req.params.retroId).start(start).sortBy('createdAt:desc').of('ticket').from('retrospectives')
         .then(function (result) {
             res.json({'results': result, 'total': result.total});
         })
@@ -58,7 +61,7 @@ exports.getTicket = function (req, res) {
 exports.deleteTicket = function (req, res) {
     db.delete('ticket').withId(req.params.ticketId).from('retrospectives')
         .then(function (result) {
-            res.json(result);
+            res.send(204);
         })
         .fail(function (err) {
             console.log(err);
@@ -67,61 +70,8 @@ exports.deleteTicket = function (req, res) {
 };
 
 exports.putTicket = function (req, res) {
-    var ticketData;
-
     req.body.retroId = req.params.retroId;
-    console.log(req.body);
-    console.log('trying to put');
-
-    var ticket = {
-        '_id': req.params.ticketId
-    };
-
-    db.put(ticket).ofType('ticket').withId(req.params.ticketId).into('retrospectives')
-        .then(function (result) {
-            res.json(result);
-        })
-        .fail(function (err) {
-            console.log(err);
-            res.json(err);
-        });
-};
-
-exports.getRetrospective = function (req, res) {
-    db.query('_id:' + req.params.retroId).of('retrospective').from('retrospectives')
-        .then(function (result) {
-            res.json(result[0]);
-        })
-        .fail(function (err) {
-            console.log(err);
-            res.json(err);
-        });
-};
-
-exports.getRetrospectives = function (req, res) {
-    db.getAll('retrospective').from('retrospectives')
-        .then(function (result) {
-            res.json({'results': result, 'total': result.total});
-        })
-        .fail(function (err) {
-            console.log(err);
-            res.json(err);
-        });
-};
-
-exports.postRetrospective = function (req, res) {
-    db.post(req.body).ofType('retrospective').into('retrospectives')
-        .then(function (result) {
-            res.json(result);
-        })
-        .fail(function (err) {
-            console.log(err);
-            res.json(err);
-        });
-};
-
-exports.putRetrospective = function (req, res) {
-    db.put(req.body).ofType('retrospective').withId(req.params.retroId).into('retrospectives')
+    db.put(req.body).ofType('ticket').withId(req.params.ticketId).into('retrospectives')
         .then(function (result) {
             res.json(result);
         })
